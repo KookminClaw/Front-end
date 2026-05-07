@@ -12,10 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "vite": "^8.0.10",
-    "@vitejs/plugin-react": "^6.0.1"
+    "vite": "^8.0.10"
   },
   "devDependencies": {
     "autoprefixer": "^10.5.0",

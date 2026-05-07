@@ -1,4 +1,7 @@
-/*
+/**
+ * ProfilePage.jsx — 3단계 온보딩 프로필 입력/수정 화면
+ * 스키마 정의서 v1 (2026-05-07) 기준
+ *
  * Step 1. 학적 정보 (필수)  — student_number / grade / department_code / enrollment_status
  * Step 2. 관심·목표 (선택) — interest_keywords / career_goals / course_interests /
  *                             extracurricular_interests / scholarship_interest
