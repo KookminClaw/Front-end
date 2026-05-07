@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import MOCK_SEED from '../mock/mockUserProfile.json';
 
 const USE_MOCK       = true;
 const API_BASE_URL   = '/api/v1';
@@ -45,7 +44,7 @@ const mockAdapter = {
   async getProfile() {
     await delay(300);
     const stored = localStorage.getItem(MOCK_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : MOCK_SEED;
+    return stored ? JSON.parse(stored) : null;
   },
   async saveProfile(payload) {
     await delay(400);
