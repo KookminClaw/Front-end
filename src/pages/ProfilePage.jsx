@@ -548,10 +548,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <style>{`
-        @keyframes slide-in { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
-        .animate-slide-in { animation: slide-in 0.25s ease-out; }
-      `}</style>
     </div>
   );
 }
