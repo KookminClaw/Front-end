@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import TagInput from "../components/InterestTagInput"
 import MultiSelect from "../components/chipUi"
 import Toggle from "../components/toggle"
@@ -108,26 +109,10 @@ export default function ProfilePage() {
   // ── 완료 화면 ──
   if (saved) {
     return (
-      <main className="p-7 font-[Pretendard,sans-serif]">
-        <div className="max-w-[560px] mx-auto bg-white rounded-2xl p-12 text-center border border-gray-100">
-          <div className="text-5xl mb-4 flex justify-center text-primary"><BiSolidParty /></div>
-          <h2 className="text-[22px] font-bold text-primary mb-2">프로필 저장 완료!</h2>
-          <p className="text-gray-500 text-sm mb-6">
-            저장된 프로필은 개인화 피드 API 요청에 자동으로 사용됩니다.
-          </p>
-          <div className="bg-[#f8f9ff] rounded-[10px] p-4 text-left mb-6 text-[13px] text-gray-700 leading-relaxed">
-            <strong>mock payload (window._mockUserProfile)</strong>
-            <br />
-            <pre className="text-xs text-primary mt-2 mb-0 overflow-x-auto">
-              {JSON.stringify(window._mockUserProfile, null, 2)}
-            </pre>
-          </div>
-          {/* <button
-            onClick={() => { setSaved(false); setStep(1); }}
-            className="px-6 py-2.5 rounded-[10px] bg-primary text-white border-none cursor-pointer text-sm font-semibold"
-          >
-            다시 편집하기
-          </button> */}
+      <main className="p-7 flex justify-center items-center h-full">
+        <div className="w-full text-center flex flex-col gap-10 items-center">
+          <h2 className="text-2xl font-bold">프로필 저장이 완료되었습니다.</h2>
+          <button className="w-44 h-10 rounded-[10px] text-white bg-primary hover:cursor-pointer"><Link to='/'>공지목록으로 돌아가기</Link></button>
         </div>
       </main>
     );
