@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FaRobot,FaStar } from "react-icons/fa";
 
 const notices = {
   '장학금': {
@@ -66,7 +67,7 @@ export default function NoticePage() {
 
       {/* AI 박스 */}
       <div className="bg-gradient-to-br from-primary-light to-[#E8F0FF] border border-[#C7D4FF] rounded-[14px] p-5 px-6 flex gap-4 items-start">
-        <div className="w-10 h-10 bg-primary rounded-[10px] flex items-center justify-center text-xl shrink-0">🤖</div>
+        <div className="w-10 h-10 bg-primary rounded-[10px] flex items-center justify-center text-xl shrink-0 text-white"><FaRobot /></div>
         <div>
           <div className="text-[11px] font-bold text-primary tracking-[0.05em] uppercase mb-1">AI 맞춤 요약</div>
           <div className="text-[13px] text-heading leading-relaxed">
@@ -117,7 +118,7 @@ export default function NoticePage() {
           </thead>
           <tbody>
             <tr className="border-b border-line cursor-pointer transition-colors duration-100 hover:bg-primary-light" onClick={() => setDetail('장학금')}>
-              <td className="px-5 py-3.5 text-[13px] align-middle">⭐</td>
+              <td className="px-5 py-3.5 text-[13px] align-middle text-yellow-300"><FaStar /></td>
               <td className="px-5 py-3.5 text-[13px] align-middle">
                 <div className="flex flex-col gap-[3px]">
                   <span className="font-medium text-heading">2025년 2학기 교내 성적우수 장학금 신청 안내</span>
@@ -182,7 +183,7 @@ export default function NoticePage() {
               <td className="px-5 py-3.5 text-[13px] align-middle text-subtext text-xs">2025.08.25</td>
             </tr>
             <tr className="cursor-pointer transition-colors duration-100 hover:bg-primary-light">
-              <td className="px-5 py-3.5 text-[13px] align-middle">⭐</td>
+              <td className="px-5 py-3.5 text-[13px] align-middle text-yellow-300"><FaStar /></td>
               <td className="px-5 py-3.5 text-[13px] align-middle">
                 <div className="flex flex-col gap-[3px]">
                   <span className="font-medium text-heading">2026년 상반기 교환학생 모집 설명회</span>
