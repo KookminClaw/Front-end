@@ -35,15 +35,15 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         <NavLink to="/" icon={<FaList />} badge="3">공지 목록</NavLink>
-        <NavLink to="/a" icon={<FaStar />}>관심 공지</NavLink>
-        <NavLink to="/aa" icon={<FaCheck />}>내 To-Do</NavLink>
+        <NavLink to="" icon={<FaStar />}>관심 공지</NavLink>
+        <NavLink to="" icon={<FaCheck />}>내 To-Do</NavLink>
 
         <div className={sectionLabel}>카테고리</div>
-        <NavLink to="/aaa" icon={<FaGraduationCap />}>학사 일정</NavLink>
-        <NavLink to="/aaaa" icon={<FaDollarSign />}>장학금</NavLink>
-        <NavLink to="/aaaaa" icon={<FaBriefcase />}>취업·인턴</NavLink>
-        <NavLink to="/aaaaaa" icon={<MdFlightTakeoff />}>교환학생</NavLink>
-        <NavLink to="/aaaaaaa" icon={<BiSolidParty />}>행사·프로그램</NavLink>
+        <NavLink to="" icon={<FaGraduationCap />}>학사 일정</NavLink>
+        <NavLink to="" icon={<FaDollarSign />}>장학금</NavLink>
+        <NavLink to="" icon={<FaBriefcase />}>취업·인턴</NavLink>
+        <NavLink to="" icon={<MdFlightTakeoff />}>교환학생</NavLink>
+        <NavLink to="" icon={<BiSolidParty />}>행사·프로그램</NavLink>
 
         <div className={sectionLabel}>설정</div>
         <NavLink to="/profile" icon={<MdSettings />}>프로필 설정</NavLink>
