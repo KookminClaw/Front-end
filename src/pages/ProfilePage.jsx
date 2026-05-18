@@ -1,49 +1,55 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import TagInput from "../components/InterestTagInput"
-import MultiSelect from "../components/chipUi"
-import Toggle from "../components/toggle"
-import MajorSearch from "../components/MajorSearch"
-import {BiSolidParty} from "react-icons/bi"
+import { saveProfile } from "../api/profiles";
 
-// 실제 API 연동 시 아래 함수만 교체하면 됩니다.
-const MOCK_PROFILE_KEY = "userProfile";
-
-async function mockSaveProfile(data) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      window._mockUserProfile = data;
-      resolve({ success: true, data });
-    }, 600);
-  });
-}
-
-async function mockLoadProfile() {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(window._mockUserProfile || null), 300);
-  });
-}
-
-// 전공 선택에 따라 변경(데모용)
-const career_goal_options = [
-  "AI엔지니어", "데이터연구가", "백엔드개발자", "프론트엔드개발자",
-  "대학원진학", "스타트업창업", "공무원", "대기업취업", "해외취업", "연구원",
+const CAREER_GOAL_OPTIONS = [
+  "AI 엔지니어",
+  "데이터 분석가",
+  "백엔드 개발자",
+  "프론트엔드 개발자",
+  "대학원 진학",
+  "스타트업 창업",
+  "공무원",
+  "대기업 취업",
+  "해외 취업",
+  "연구원",
 ];
+
 const COURSE_INTEREST_OPTIONS = [
-  "머신러닝", "딥러닝", "통계", "데이터분석", "웹개발", "앱개발",
-  "알고리즘", "데이터베이스", "네트워크", "보안",
+  "머신러닝",
+  "클라우드",
+  "통계",
+  "데이터 분석",
+  "웹 개발",
+  "앱 개발",
+  "알고리즘",
+  "데이터베이스",
+  "네트워크",
+  "보안",
 ];
+
 const EXTRACURRICULAR_OPTIONS = [
-  "특강", "공모전", "해외연수", "인턴십", "학술제", "동아리", "멘토링", "봉사활동",
+  "학회",
+  "공모전",
+  "해외 연수",
+  "인턴십",
+  "동아리",
+  "멘토링",
+  "봉사활동",
 ];
+
 const NOTIFY_CATEGORY_OPTIONS = ["장학", "과제", "비교과", "취업", "학사공지"];
 
-const KEYWORD_SUGGESTIONS = [
-  "AI", "데이터분석", "딥러닝", "클라우드", "알고리즘", "UI/UX",
-  "블록체인", "IoT", "자연어처리", "컴퓨터비전",
+const DEPARTMENT_OPTIONS = [
+  { code: "sw", name: "소프트웨어학부" },
+  { code: "ai", name: "인공지능학부" },
+  { code: "elec", name: "전기전자공학부" },
+  { code: "car", name: "자동차모빌리티학과" },
+  { code: "business", name: "경영학부" },
+  { code: "design", name: "디자인학부" },
+  { code: "law", name: "법학부" },
 ];
 
-// 폼 초기 상태
 const INITIAL_FORM = {
   student_number: "",
   grade: "",
@@ -59,60 +65,179 @@ const INITIAL_FORM = {
   notify_categories: [],
 };
 
+function Toggle({ value, onChange, label, description }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium text-gray-700 m-0">{label}</p>
+        {description && <p className="text-xs text-gray-400 mt-0.5 mb-0">{description}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={[
+          "w-11 h-6 rounded-xl border-none cursor-pointer relative transition-colors duration-200 flex-shrink-0",
+          value ? "bg-primary" : "bg-gray-300",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.2)]",
+            value ? "left-[22px]" : "left-0.5",
+          ].join(" ")}
+        />
+      </button>
+    </div>
+  );
+}
+
+function OptionChips({ options, value, onChange, max }) {
+  const toggle = (option) => {
+    if (value.includes(option)) {
+      onChange(value.filter((item) => item !== option));
+      return;
+    }
+    if (value.length < max) onChange([...value, option]);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const selected = value.includes(option);
+        const disabled = value.length >= max && !selected;
+
+        return (
+          <button
+            key={option}
+            type="button"
+            disabled={disabled}
+            onClick={() => toggle(option)}
+            className={[
+              "px-3.5 py-1.5 rounded-full text-[13px] transition-all duration-150",
+              selected
+                ? "border border-blue-600 bg-blue-50 text-primary font-semibold"
+                : "border border-slate-200 bg-gray-50 text-gray-500 font-normal",
+              disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer",
+            ].join(" ")}
+          >
+            {option}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function KeywordInput({ value, onChange }) {
+  const [input, setInput] = useState("");
+
+  const addKeyword = () => {
+    const keyword = input.trim();
+    if (!keyword || value.includes(keyword) || value.length >= 10) return;
+    onChange([...value, keyword]);
+    setInput("");
+  };
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addKeyword();
+            }
+          }}
+          placeholder="예: AI"
+          className="flex-1 px-3 py-2.5 rounded-[10px] border border-slate-200 text-sm outline-none box-border"
+        />
+        <button
+          type="button"
+          onClick={addKeyword}
+          className="px-4 py-2.5 rounded-[10px] bg-primary text-white text-sm font-semibold"
+        >
+          추가
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {value.map((keyword) => (
+          <button
+            key={keyword}
+            type="button"
+            onClick={() => onChange(value.filter((item) => item !== keyword))}
+            className="px-2.5 py-1 rounded-md bg-indigo-50 text-primary text-xs font-semibold"
+          >
+            {keyword} x
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-gray-400 mt-1">{value.length}/10개</p>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
 
-  const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+  const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
   const validateStep1 = () => {
-    const errs = {};
-    if (!form.student_number.trim()) errs.student_number = "학번을 입력하세요.";
-    else if (!/^\d{8}$/.test(form.student_number.trim())) errs.student_number = "올바른 학번 형식이 아닙니다.";
-    if (!form.grade) errs.grade = "학년을 선택하세요.";
-    if (!form.department_code) errs.department_code = "학과를 선택하세요.";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    const nextErrors = {};
+    if (!form.student_number.trim()) nextErrors.student_number = "학번을 입력해주세요.";
+    else if (!/^\d{8}$/.test(form.student_number.trim())) {
+      nextErrors.student_number = "학번은 8자리 숫자로 입력해주세요.";
+    }
+    if (!form.grade) nextErrors.grade = "학년을 선택해주세요.";
+    if (!form.department_code) nextErrors.department_code = "학과를 선택해주세요.";
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleNext = () => {
     if (step === 1 && !validateStep1()) return;
-    setStep((s) => s + 1);
+    setStep((current) => current + 1);
   };
 
   const handleSubmit = async () => {
     setSaving(true);
-    const payload = {
-      student_number: form.student_number.trim(),
-      grade: Number(form.grade),
-      department_code: form.department_code,
-      enrollment_status: form.enrollment_status,
-      interest_keywords: form.interest_keywords,
-      career_goals: form.career_goals,
-      course_interests: form.course_interests,
-      extracurricular_interests: form.extracurricular_interests,
-      scholarship_interest: form.scholarship_interest,
-      notify_push: form.notify_push,
-      notify_email: form.notify_email,
-      notify_categories: form.notify_categories.length ? form.notify_categories : null,
-    };
-    await mockSaveProfile(payload);
-    setSaving(false);
-    setSaved(true);
+    setSubmitError("");
+
+    try {
+      await saveProfile(form);
+      setSaved(true);
+    } catch (error) {
+      setSubmitError(
+        error.status === 409
+          ? "이미 등록된 학번입니다."
+          : error.message || "프로필 저장에 실패했습니다."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const STEPS = ["학적 정보", "관심·목표", "알림 선호"];
+  const steps = ["학적 정보", "관심 항목", "알림 선호"];
 
-  // ── 완료 화면 ──
   if (saved) {
     return (
       <main className="p-7 flex justify-center items-center h-full">
         <div className="w-full text-center flex flex-col gap-10 items-center">
           <h2 className="text-2xl font-bold">프로필 저장이 완료되었습니다.</h2>
-          <button className="w-44 h-10 rounded-[10px] text-white bg-primary hover:cursor-pointer"><Link to='/'>공지목록으로 돌아가기</Link></button>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center w-44 h-10 rounded-[10px] text-white bg-primary"
+          >
+            공지 목록으로 가기
+          </Link>
         </div>
       </main>
     );
@@ -121,27 +246,24 @@ export default function ProfilePage() {
   return (
     <main className="p-7">
       <div className="w-full">
-        {/* 타이틀 */}
         <h1 className="text-xl font-bold mb-6">프로필 설정</h1>
 
-        {/* 단계별 표시 */}
         <div className="flex items-center mb-5">
-          {STEPS.map((label, i) => {
-            const num = i + 1;
-            const active = step === num;
-            const done = step > num;
+          {steps.map((label, index) => {
+            const number = index + 1;
+            const active = step === number;
+            const done = step > number;
+
             return (
-              <React.Fragment key={num}>
+              <React.Fragment key={label}>
                 <div className="flex flex-col items-center flex-1">
                   <div
                     className={[
                       "w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold mb-1.5",
-                      done || active
-                        ? "bg-primary text-white"
-                        : "bg-gray-200 text-gray-400",
+                      done || active ? "bg-primary text-white" : "bg-gray-200 text-gray-400",
                     ].join(" ")}
                   >
-                    {done ? "✓" : num}
+                    {done ? "✓" : number}
                   </div>
                   <span
                     className={[
@@ -152,11 +274,11 @@ export default function ProfilePage() {
                     {label}
                   </span>
                 </div>
-                {i < STEPS.length - 1 && (
+                {index < steps.length - 1 && (
                   <div
                     className={[
                       "h-0.5 flex-[2] mb-[22px] transition-colors duration-300",
-                      step > num ? "bg-primary" : "bg-gray-200",
+                      step > number ? "bg-primary" : "bg-gray-200",
                     ].join(" ")}
                   />
                 )}
@@ -165,22 +287,22 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* 카드 */}
         <div className="bg-white rounded-2xl border border-gray-100 px-8 py-8 mb-5">
-
-          {/* 학적 정보 */}
           {step === 1 && (
             <div>
               <h2 className="text-base font-bold mb-1">학적 정보</h2>
-              <p className="text-[13px] text-gray-400 mb-6">추천 시스템의 기본 조건 필터링에 사용됩니다. (필수)</p>
+              <p className="text-[13px] text-gray-400 mb-6">
+                추천 시스템의 기본 조건 필터링에 사용됩니다.
+              </p>
 
-              {/* 학번 */}
               <div className="mb-5">
-                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">학번</label>
+                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                  학번
+                </label>
                 <input
                   type="text"
                   value={form.student_number}
-                  onChange={(e) => set("student_number", e.target.value)}
+                  onChange={(event) => set("student_number", event.target.value)}
                   placeholder="예: 20261234"
                   className={[
                     "w-full px-3 py-2.5 rounded-[10px] border text-sm outline-none box-border",
@@ -192,12 +314,13 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* 학년 */}
               <div className="mb-5">
-                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">학년</label>
+                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                  학년
+                </label>
                 <select
                   value={form.grade}
-                  onChange={(e) => set("grade", e.target.value)}
+                  onChange={(event) => set("grade", event.target.value)}
                   className={[
                     "w-full px-3 py-2.5 rounded-[10px] border text-sm outline-none box-border bg-white cursor-pointer",
                     errors.grade ? "border-red-500" : "border-slate-200",
@@ -210,29 +333,40 @@ export default function ProfilePage() {
                   <option value="4">4학년</option>
                   <option value="5">기타</option>
                 </select>
-                {errors.grade && (
-                  <p className="text-xs text-red-500 mt-1">{errors.grade}</p>
-                )}
+                {errors.grade && <p className="text-xs text-red-500 mt-1">{errors.grade}</p>}
               </div>
 
-              {/* 학과 */}
               <div className="mb-5">
-                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">학과</label>
-                <MajorSearch
+                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                  학과
+                </label>
+                <select
                   value={form.department_code}
-                  onChange={(code) => set("department_code", code)}
-                />
+                  onChange={(event) => set("department_code", event.target.value)}
+                  className={[
+                    "w-full px-3 py-2.5 rounded-[10px] border text-sm outline-none box-border bg-white cursor-pointer",
+                    errors.department_code ? "border-red-500" : "border-slate-200",
+                  ].join(" ")}
+                >
+                  <option value="">선택해주세요</option>
+                  {DEPARTMENT_OPTIONS.map((department) => (
+                    <option key={department.code} value={department.code}>
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
                 {errors.department_code && (
                   <p className="text-xs text-red-500 mt-1">{errors.department_code}</p>
                 )}
               </div>
 
-              {/* 재학 상태 */}
               <div className="mb-5">
-                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">재학 상태</label>
+                <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+                  재학 상태
+                </label>
                 <select
                   value={form.enrollment_status}
-                  onChange={(e) => set("enrollment_status", e.target.value)}
+                  onChange={(event) => set("enrollment_status", event.target.value)}
                   className="w-full px-3 py-2.5 rounded-[10px] border border-slate-200 text-sm outline-none box-border bg-white cursor-pointer"
                 >
                   <option value="enrolled">재학</option>
@@ -243,92 +377,87 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* ── STEP 2: 관심·목표 ── */}
           {step === 2 && (
             <div>
-              <h2 className="text-base font-bold mb-1">관심·목표</h2>
-              <p className="text-[13px] text-gray-400 mb-6">입력할수록 추천 품질이 크게 올라갑니다. 스킵 가능합니다.</p>
+              <h2 className="text-base font-bold mb-1">관심 항목</h2>
+              <p className="text-[13px] text-gray-400 mb-6">
+                입력할수록 추천 결과가 더 잘 맞춰집니다.
+              </p>
 
-              {/* 관심 키워드 */}
               <div className="mb-5">
                 <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                  관심 키워드 <span className="text-gray-400 font-normal">(최대 10개)</span>
+                  관심 키워드
                 </label>
-                <TagInput
+                <KeywordInput
                   value={form.interest_keywords}
-                  onChange={(v) => set("interest_keywords", v)}
-                  max={10}
-                  suggestions={KEYWORD_SUGGESTIONS}
+                  onChange={(value) => set("interest_keywords", value)}
                 />
               </div>
 
-              {/* 진로 목표 */}
               <div className="mb-5">
                 <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                  진로 목표 <span className="text-gray-400 font-normal">(최대 5개)</span>
+                  진로 목표
                 </label>
-                <MultiSelect
-                  options={career_goal_options}
+                <OptionChips
+                  options={CAREER_GOAL_OPTIONS}
                   value={form.career_goals}
-                  onChange={(v) => set("career_goals", v)}
+                  onChange={(value) => set("career_goals", value)}
                   max={5}
                 />
               </div>
 
-              {/* 수강 관심 분야 */}
               <div className="mb-5">
                 <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                  수강 관심 분야 <span className="text-gray-400 font-normal">(최대 10개)</span>
+                  수강 관심 분야
                 </label>
-                <MultiSelect
+                <OptionChips
                   options={COURSE_INTEREST_OPTIONS}
                   value={form.course_interests}
-                  onChange={(v) => set("course_interests", v)}
+                  onChange={(value) => set("course_interests", value)}
                   max={10}
                 />
               </div>
 
-              {/* 비교과 관심 */}
               <div className="mb-5">
                 <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                  비교과 관심 <span className="text-gray-400 font-normal">(최대 10개)</span>
+                  비교과 관심 분야
                 </label>
-                <MultiSelect
+                <OptionChips
                   options={EXTRACURRICULAR_OPTIONS}
                   value={form.extracurricular_interests}
-                  onChange={(v) => set("extracurricular_interests", v)}
+                  onChange={(value) => set("extracurricular_interests", value)}
                   max={10}
                 />
               </div>
 
-              {/* 장학 토글 */}
               <div className="border-t border-gray-100 pt-5">
                 <Toggle
                   value={form.scholarship_interest}
-                  onChange={(v) => set("scholarship_interest", v)}
+                  onChange={(value) => set("scholarship_interest", value)}
                   label="장학 추천 받기"
-                  description="장학 카테고리 피드를 추천에 포함합니다."
+                  description="장학 카테고리 공지를 추천에 포함합니다."
                 />
               </div>
             </div>
           )}
 
-          {/* ── STEP 3: 알림 선호 ── */}
           {step === 3 && (
             <div>
               <h2 className="text-base font-bold mb-1">알림 선호</h2>
-              <p className="text-[13px] text-gray-400 mb-6">기본값으로 사용하거나 원하는 설정으로 변경하세요.</p>
+              <p className="text-[13px] text-gray-400 mb-6">
+                주요 공지 알림을 받을 방식을 선택해주세요.
+              </p>
 
               <div className="flex flex-col gap-5 mb-6">
                 <Toggle
                   value={form.notify_push}
-                  onChange={(v) => set("notify_push", v)}
+                  onChange={(value) => set("notify_push", value)}
                   label="푸시 알림"
-                  description="앱 알림으로 새 소식을 받습니다."
+                  description="앱 알림으로 주요 소식을 받습니다."
                 />
                 <Toggle
                   value={form.notify_email}
-                  onChange={(v) => set("notify_email", v)}
+                  onChange={(value) => set("notify_email", value)}
                   label="이메일 알림"
                   description="이메일로 주요 소식을 받습니다."
                 />
@@ -336,40 +465,45 @@ export default function ProfilePage() {
 
               <div className="mb-5">
                 <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
-                  알림 받을 카테고리 <span className="text-gray-400 font-normal">(미선택 시 전체)</span>
+                  알림 받을 카테고리
                 </label>
                 <div className="flex flex-col gap-2.5 mt-2">
-                  {NOTIFY_CATEGORY_OPTIONS.map((cat) => {
-                    const checked = form.notify_categories.includes(cat);
+                  {NOTIFY_CATEGORY_OPTIONS.map((category) => {
+                    const checked = form.notify_categories.includes(category);
                     return (
-                      <label key={cat} className="flex items-center gap-2.5 cursor-pointer">
+                      <label key={category} className="flex items-center gap-2.5 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => {
                             const next = checked
-                              ? form.notify_categories.filter((c) => c !== cat)
-                              : [...form.notify_categories, cat];
+                              ? form.notify_categories.filter((item) => item !== category)
+                              : [...form.notify_categories, category];
                             set("notify_categories", next);
                           }}
                           className="w-4 h-4 accent-primary"
                         />
-                        <span className="text-sm text-gray-700">{cat}</span>
+                        <span className="text-sm text-gray-700">{category}</span>
                       </label>
                     );
                   })}
                 </div>
               </div>
+
+              {submitError && (
+                <div className="rounded-[10px] bg-red-50 text-red-600 text-sm px-4 py-3">
+                  {submitError}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* 버튼 영역 */}
         <div className="flex justify-between gap-3">
           {step > 1 ? (
             <button
               type="button"
-              onClick={() => setStep((s) => s - 1)}
+              onClick={() => setStep((current) => current - 1)}
               className="px-6 py-3 rounded-[10px] border border-slate-200 bg-white text-gray-700 text-sm font-semibold cursor-pointer"
             >
               이전
@@ -384,33 +518,22 @@ export default function ProfilePage() {
               onClick={handleNext}
               className="px-7 py-3 rounded-[10px] border-none bg-primary text-white text-sm font-semibold cursor-pointer"
             >
-              다음 →
+              다음
             </button>
           ) : (
-            <div className="flex gap-2.5 items-center">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={saving}
-                className={[
-                  "px-7 py-3 rounded-[10px] border-none text-white text-sm font-semibold",
-                  saving ? "bg-indigo-300 cursor-not-allowed" : "bg-primary cursor-pointer",
-                ].join(" ")}
-              >
-                {saving ? "저장 중..." : "저장하기"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className={[
+                "px-7 py-3 rounded-[10px] border-none text-white text-sm font-semibold",
+                saving ? "bg-indigo-300 cursor-not-allowed" : "bg-primary cursor-pointer",
+              ].join(" ")}
+            >
+              {saving ? "저장 중..." : "저장하기"}
+            </button>
           )}
         </div>
-
-        {/* Step 2, 3 스킵 안내 */}
-        {step > 1 && (
-          <p className="text-center text-xs text-gray-400 mt-3">
-            {step === 2
-              ? "관심·목표는 나중에 설정할 수 있어요."
-              : "알림 설정은 설정 메뉴에서도 변경할 수 있어요."}
-          </p>
-        )}
       </div>
     </main>
   );
