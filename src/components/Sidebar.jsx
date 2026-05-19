@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { FaCheck, FaDollarSign, FaGraduationCap, FaList, FaStar, FaUser } from "react-icons/fa";
 import { MdEdit, MdFlightTakeoff, MdSettings } from "react-icons/md";
@@ -46,24 +47,24 @@ export default function Sidebar() {
         <NavLink to="/" icon={<FaList />}>
           공지 목록
         </NavLink>
-        <NavLink to="/" icon={<FaStar />}>
+        <NavLink to="/favorites" icon={<FaStar />}>
           관심 공지
         </NavLink>
-        <NavLink to="/" icon={<FaCheck />}>
+        <NavLink to="/todo" icon={<FaCheck />}>
           To-Do
         </NavLink>
 
         <div className={sectionLabel}>카테고리</div>
-        <NavLink to="/" icon={<FaGraduationCap />}>
+        <NavLink to="/category/academic" icon={<FaGraduationCap />}>
           학사 일정
         </NavLink>
-        <NavLink to="/" icon={<FaDollarSign />}>
+        <NavLink to="/category/scholarship" icon={<FaDollarSign />}>
           장학금
         </NavLink>
-        <NavLink to="/" icon={<MdFlightTakeoff />}>
+        <NavLink to="/category/exchange" icon={<MdFlightTakeoff />}>
           교환학생
         </NavLink>
-        <NavLink to="/" icon={<BiSolidParty />}>
+        <NavLink to="/category/events" icon={<BiSolidParty />}>
           행사 프로그램
         </NavLink>
 
